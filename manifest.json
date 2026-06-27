@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "HuddleHive Misinformation Detector",
+  "version": "1.0.0",
+  "description": "Detects misinformation in Facebook posts and highlights them as you scroll.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.facebook.com/*",
+    "https://*.facebook.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/*", "https://*.facebook.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "HuddleHive Detector"
+  }
+}
