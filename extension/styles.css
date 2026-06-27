@@ -47,23 +47,23 @@
 }
 
 .hh-panel-title {
-  color: #e2e8f0;
+  color: #1e293b;
   font-size: 13px;
   font-weight: 600;
 }
 
 .hh-panel-subtitle {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 12px;
   margin-top: 2px;
 }
 
 .hh-panel-divider {
-  border-top: 1px solid rgba(148,163,184,0.15);
+  border-top: 1px solid #e2e8f0;
 }
 
 .hh-panel-point {
-  color: #e2e8f0;
+  color: #334155;
   font-size: 12px;
   line-height: 1.5;
   padding-left: 8px;
@@ -73,10 +73,3 @@
 .hh-panel-point.hh-green { border-left-color: #22c55e; }
 .hh-panel-point.hh-amber { border-left-color: #f59e0b; }
 .hh-panel-point.hh-red   { border-left-color: #ef4444; }
-
-.hh-panel-warning {
-  color: #94a3b8;
-  font-size: 11px;
-  line-height: 1.5;
-  font-style: italic;
-}

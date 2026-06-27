@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, List, Union
+from typing import List
 from dotenv import load_dotenv
 import json
 import os
@@ -14,12 +14,8 @@ class VerifyRequest(BaseModel):
     text: str = Field(..., min_length=1, description="Text to verify for authenticity")
 
 class VerifyResponse(BaseModel):
-    label: str
-    confidence: float
-    authenticity_score: float
+    score: float
     explanation: List[str]
-    warning: str
-    raw_result: Optional[str] = None
 
 app = FastAPI(
     title="Text Authenticity Checker",
@@ -40,16 +36,16 @@ MODEL_NAME = os.getenv("VERIFY_MODEL", "gemini-2.5-flash")
 def build_validation_prompt(text: str) -> str:
     return (
         "You are a fact-validation assistant. Evaluate the following text for authenticity and truthfulness. "
-        "Return only JSON with the following fields: label, confidence, authenticity_score, explanation, warning. "
-        "label must be one of: red, amber, green. "
-        "confidence must be a number from 0 to 100. "
-        "authenticity_score must be a number from 0.0 to 1.0. "
-        "explanation must be exactly 3 short points explaining why the claim is inaccurate. "
+        "Return only JSON with the following fields: score, explanation. "
+        "score must be a number from 0.0 to 1.0 representing how credible the text is, where: "
+        "0.7–1.0 means factually supported with no misleading framing, "
+        "0.4–0.69 means unverified claims or missing context, "
+        "0.0–0.39 means demonstrably false or highly manipulative. "
+        "explanation must be exactly 3 short points explaining the assessment. "
         "Each explanation point must be no longer than 100 characters. "
-        "warning must be no longer than 100 characters. "
         "Do not use markdown formatting or additional text outside the JSON object. "
         "If the text is very long, focus on the main factual claim and assess whether it is supported by evidence. "
-        "Text:\n" + text
+        "Text:\n---BEGIN TEXT---\n" + text + "\n---END TEXT---"
     )
 
 
@@ -117,12 +113,8 @@ def analyze_text(text: str) -> dict:
     parsed = parse_validation_response(raw_text)
 
     return {
-        "label": parsed.get("label", "amber"),
-        "confidence": float(parsed.get("confidence", 0.0)),
-        "authenticity_score": float(parsed.get("authenticity_score", 0.0)),
+        "score": float(parsed.get("score", 0.5)),
         "explanation": parsed.get("explanation") if isinstance(parsed.get("explanation"), list) else [parsed.get("explanation", "Unable to explain the outcome.")],
-        "warning": parsed.get("warning", "No warning provided."),
-        "raw_result": raw_text,
     }
 
 

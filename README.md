@@ -1,68 +1,75 @@
-# Text Authenticity Checker Backend
+# ScrollSensay
 
-A FastAPI backend that evaluates whether provided text is authentic or fake using an AI model. It returns a traffic-light classification: `red`, `amber`, or `green`, along with a confidence score and reasons why the text may be unreliable.
+ScrollSensay watches the content in your viewport as you browse and flags potentially misleading or untrustworthy text in real time. Powered by Google Gemini, it uses a traffic-light indicator based on the result:
 
-## Features
+- 🟢 Green, no concerns found 😊
+- 🟡 Amber, worth a second look 🤔
+- 🔴 Red, some concerns here 😧
 
-- Accepts long text input
-- Uses a Gemini-style AI model for validation
-- Returns `label`, `confidence`, `authenticity_score`, `explanation`, and `warning`
+## How it works
+
+1. As you scroll, ScrollSensay reads the visible text on the page
+2. It sends the text to a local AI backend for analysis
+3. The dot and emoji in the corner changes based on the result
+4. Click the dot to see a breakdown of what was flagged and why
+
+## Project structure
+
+```
+ScrollSensay/
+├── extension/
+│   ├── content.js        # Reads viewport text, shows indicator dot and panel
+│   ├── styles.css        # Indicator and panel styles
+│   ├── popup.html/js     # Extension popup for configuring the API endpoint
+│   ├── background.js     # Service worker
+│   └── manifest.json     # Chrome extension manifest
+├── api/
+│   ├── app.py            # FastAPI backend (sends text to Gemini, returns score + explanation)
+│   ├── requirements.txt  # Python dependencies
+│   └── test_app.py
+├── .env.example
+└── .gitignore
+```
 
 ## Setup
 
-1. Create a Python virtual environment:
+### 1. Backend
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # macOS / Linux
-   venv\Scripts\activate    # Windows
-   ```
+Copy `.env.example` to `.env` and fill in your values, then install dependencies and start the server:
 
-2. Install dependencies:
+```bash
+cd api
+python -m venv venv
+source venv/bin/activate   # macOS / Linux
+venv\Scripts\activate      # Windows
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+pip install -r requirements.txt
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
 
-3. Set your Google Generative Language API key in the environment:
+### 2. Chrome extension
 
-   ```bash
-   set GOOGLE_API_KEY=your_api_key_here
-   ```
-
-4. Start the server:
-
-   ```bash
-   uvicorn app:app --reload --host 0.0.0.0 --port 8000
-   ```
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked** and select the `extension/` folder
+4. Click the ScrollSensay extension icon and set to Active
 
 ## API
 
 ### POST /api/verify
 
-Request body:
+**Request:**
+```json
+{ "text": "Text to analyse" }
+```
 
+**Response:**
 ```json
 {
-  "text": "Your text content to validate goes here."
+  "score": 0.2,
+  "explanation": ["Point one", "Point two", "Point three"]
 }
 ```
 
-Response body:
+`score` is 0.0–1.0, which the extension maps to green (≥0.7), amber (0.4–0.69), or red (<0.4).
 
-```json
-{
-  "label": "red",
-  "confidence": 82.4,
-  "authenticity_score": 0.12,
-  "explanation": "...",
-  "warning": "...",
-  "raw_result": "..."
-}
-```
-
-## Notes
-
-- The model name defaults to `gemini-1.1` (used in the Generative Language REST endpoint).
-- To use a different model, set `VERIFY_MODEL` in your environment.
-- The backend validates text and also provides reasons why the text may not be trustworthy.

@@ -1,8 +1,9 @@
 const SCROLL_DEBOUNCE = 2000;
+const API_ENDPOINT = 'http://localhost:8000/api/verify';
 
 let enabled = true;
 let lastViewportText = '';
-let lastResult = { label: null, explanation: [], warning: '' };
+let lastResult = { label: null, explanation: [] };
 let panelOpen = false;
 const textCache = new Map();
 
@@ -43,8 +44,9 @@ function buildPanel() {
   const subtitle = document.createElement('div');
   subtitle.className = 'hh-panel-subtitle';
   subtitle.textContent = lastResult.label === null ? 'Still scanning…'
-    : lastResult.label === 'green' ? 'Looks credible'
-    : 'Worth a closer look';
+    : lastResult.label === 'green' ? 'No concerns found'
+    : lastResult.label === 'amber' ? 'Worth a second look'
+    : 'Some concerns here';
 
   header.appendChild(title);
   header.appendChild(subtitle);
@@ -64,12 +66,6 @@ function buildPanel() {
       });
     }
 
-    if (lastResult.warning) {
-      const warningEl = document.createElement('div');
-      warningEl.className = 'hh-panel-warning';
-      warningEl.textContent = lastResult.warning;
-      panel.appendChild(warningEl);
-    }
   }
 }
 
@@ -95,36 +91,35 @@ document.addEventListener('click', (e) => {
 
 // --- API ---
 
-async function callAPI(text) {
+const TEXT_CACHE_MAX = 50;
+
+async function callAPI(text, retries = 3) {
   if (textCache.has(text)) return textCache.get(text);
 
-  const { apiEndpoint, apiKey } = await chrome.storage.local.get(['apiEndpoint', 'apiKey']);
-  if (!apiEndpoint) return null;
-
-  const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-
-  const res = await fetch(apiEndpoint, {
+  const res = await fetch(API_ENDPOINT, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text }),
   });
 
   if (res.status === 429) {
+    if (retries <= 0) return null;
     const retryAfter = parseInt(res.headers.get('Retry-After') || '60', 10);
     await new Promise(r => setTimeout(r, retryAfter * 1000));
-    return callAPI(text);
+    return callAPI(text, retries - 1);
   }
   if (!res.ok) throw new Error(`API ${res.status}`);
   const data = await res.json();
 
-  // API returns: { label: 'red'|'amber'|'green', authenticity_score, explanation, warning }
+  const score = typeof data.score === 'number' ? data.score : 0.5;
   const result = {
-    label: ['red', 'amber', 'green'].includes(data.label) ? data.label : 'amber',
+    label: score >= 0.7 ? 'green' : score >= 0.4 ? 'amber' : 'red',
     explanation: Array.isArray(data.explanation) ? data.explanation : [data.explanation || ''],
-    warning: data.warning || '',
   };
 
+  if (textCache.size >= TEXT_CACHE_MAX) {
+    textCache.delete(textCache.keys().next().value);
+  }
   textCache.set(text, result);
   return result;
 }
@@ -154,17 +149,17 @@ async function updateIndicator() {
   if (!enabled) return;
   const text = getViewportText();
   if (!text || text.length < 50 || text === lastViewportText) return;
-  lastViewportText = text;
 
   try {
     const result = await callAPI(text);
     if (result) {
+      lastViewportText = text;
       lastResult = result;
       setIndicator(result.label);
       if (panelOpen) buildPanel();
     }
   } catch (err) {
-    console.warn('[HuddleHive]', err.message);
+    console.warn('[ScrollSensay]', err.message);
   }
 }
 
