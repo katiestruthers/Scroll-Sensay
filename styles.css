@@ -1,6 +1,82 @@
 #hh-indicator {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
   z-index: 2147483647;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: background-color 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  user-select: none;
+}
+
+#hh-indicator.hh-green { background: #22c55e; }
+#hh-indicator.hh-amber { background: #f59e0b; }
+#hh-indicator.hh-red   { background: #ef4444; }
+
+#hh-panel {
+  position: fixed;
+  bottom: 80px;
+  right: 40px;
+  width: 280px;
+  z-index: 2147483646;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  background: white;
+  border-radius: 16px;
+  padding: 20px 20px 28px 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#hh-panel.hh-open {
+  display: flex;
+}
+
+.hh-panel-header {
+  margin-bottom: 4px;
+}
+
+.hh-panel-title {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hh-panel-subtitle {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.hh-panel-divider {
+  border-top: 1px solid rgba(148,163,184,0.15);
+}
+
+.hh-panel-point {
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.5;
+  padding-left: 8px;
+  border-left: 3px solid #94a3b8;
+}
+
+.hh-panel-point.hh-green { border-left-color: #22c55e; }
+.hh-panel-point.hh-amber { border-left-color: #f59e0b; }
+.hh-panel-point.hh-red   { border-left-color: #ef4444; }
+
+.hh-panel-warning {
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.5;
+  font-style: italic;
 }
