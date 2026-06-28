@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 load_dotenv()
 
 class VerifyRequest(BaseModel):
-    text: str = Field(..., min_length=1, description="Text to verify for authenticity")
+    text: str = Field(..., min_length=200, description="Text to verify for authenticity")
 
 class VerifyResponse(BaseModel):
     score: float
@@ -80,7 +80,7 @@ def analyze_text(text: str) -> dict:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 512},
+        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 2048},
     }
 
     try:
@@ -110,6 +110,7 @@ def analyze_text(text: str) -> dict:
     except (KeyError, IndexError, TypeError):
         raw_text = json.dumps(data)
 
+    print("[ScrollSensay] raw_text:", repr(raw_text))
     parsed = parse_validation_response(raw_text)
 
     return {

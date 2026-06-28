@@ -24,17 +24,19 @@
 
 #hh-panel {
   position: fixed;
-  bottom: 80px;
+  bottom: 120px;
   right: 40px;
-  width: 280px;
+  width: 300px;
+  max-height: 70vh;
+  overflow-y: auto;
   z-index: 2147483646;
   display: none;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   background: white;
   border-radius: 16px;
-  padding: 20px 20px 28px 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  padding: 24px 22px 28px 22px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -43,33 +45,44 @@
 }
 
 .hh-panel-header {
-  margin-bottom: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0;
 }
 
 .hh-panel-title {
   color: #1e293b;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: pre-line;
 }
 
-.hh-panel-subtitle {
-  color: #64748b;
-  font-size: 12px;
-  margin-top: 2px;
+.hh-panel-audio {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
 }
 
 .hh-panel-divider {
   border-top: 1px solid #e2e8f0;
+  margin: 2px 0;
 }
 
 .hh-panel-point {
   color: #334155;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
-  padding-left: 8px;
-  border-left: 3px solid #94a3b8;
+  padding-left: 0;
+  border-left: none;
 }
-
-.hh-panel-point.hh-green { border-left-color: #22c55e; }
-.hh-panel-point.hh-amber { border-left-color: #f59e0b; }
-.hh-panel-point.hh-red   { border-left-color: #ef4444; }

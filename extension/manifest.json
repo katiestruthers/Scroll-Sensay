@@ -22,5 +22,11 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "ScrollSensay"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/audio-icon.svg"],
+      "matches": ["https://*/*", "http://*/*"]
+    }
+  ]
 }

@@ -1,4 +1,4 @@
-const SCROLL_DEBOUNCE = 2000;
+const SCROLL_DEBOUNCE = 3000;
 const API_ENDPOINT = 'http://localhost:8000/api/verify';
 
 let enabled = true;
@@ -37,19 +37,27 @@ function buildPanel() {
   const header = document.createElement('div');
   header.className = 'hh-panel-header';
 
+  const titleWrap = document.createElement('div');
+
   const title = document.createElement('div');
   title.className = 'hh-panel-title';
-  title.textContent = "Sensay's Advice:";
+  title.textContent = lastResult.label === null ? "Sensay's Advice:\nStill scanning…"
+    : lastResult.label === 'green' ? "Sensay's Advice:\nNo concerns found"
+    : "Sensay's Advice:\nWorth a closer look";
+  title.style.whiteSpace = 'pre-line';
+  titleWrap.appendChild(title);
+  header.appendChild(titleWrap);
 
-  const subtitle = document.createElement('div');
-  subtitle.className = 'hh-panel-subtitle';
-  subtitle.textContent = lastResult.label === null ? 'Still scanning…'
-    : lastResult.label === 'green' ? 'No concerns found'
-    : lastResult.label === 'amber' ? 'Worth a second look'
-    : 'Some concerns here';
+  const audio = document.createElement('button');
+  audio.className = 'hh-panel-audio';
+  audio.innerHTML = '<img src="' + chrome.runtime.getURL('icons/audio-icon.svg') + '" width="18" height="18" alt="Read aloud" />';
+  audio.setAttribute('aria-label', 'Read aloud');
+  audio.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speakResult();
+  });
+  header.appendChild(audio);
 
-  header.appendChild(title);
-  header.appendChild(subtitle);
   panel.appendChild(header);
 
   if (lastResult.label !== null) {
@@ -61,12 +69,24 @@ function buildPanel() {
       lastResult.explanation.forEach(point => {
         const pointEl = document.createElement('div');
         pointEl.className = `hh-panel-point hh-${lastResult.label}`;
-        pointEl.textContent = point;
+        pointEl.textContent = typeof point === 'object' ? (point.body || '') : String(point);
         panel.appendChild(pointEl);
       });
     }
-
   }
+}
+
+function speakResult() {
+  if (!window.speechSynthesis) return;
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+    return;
+  }
+  const parts = (lastResult.explanation || []).map(p =>
+    typeof p === 'object' ? (p.body || '') : String(p)
+  );
+  const u = new SpeechSynthesisUtterance(parts.join('. '));
+  speechSynthesis.speak(u);
 }
 
 function showPanel() {
@@ -148,7 +168,9 @@ function getViewportText() {
 async function updateIndicator() {
   if (!enabled) return;
   const text = getViewportText();
-  if (!text || text.length < 50 || text === lastViewportText) return;
+  if (!text || text.length < 200) return;
+  if (text === lastViewportText) return;
+  if (lastViewportText && text.slice(0, 500) === lastViewportText.slice(0, 500)) return;
 
   try {
     const result = await callAPI(text);
